@@ -22,6 +22,15 @@ Ejemplo:
 docker run -d --name=MiContenedor -e MYSQL_PASS=mysqlp -e SSH_PASS=sshp informaticaucm/aw-sw
 ```
 
+## Instrucciones de uso
+
+En el momento de lanzar el contenedor, se activan los siguientes servicios y funciones:
+
+* Servidor SSH: Se puede acceder directamente como `root` usando el password generado al ejecutar el contenedor.
+* Servidor Apache: Configurado por defecto con `/var/www/html` como directorio raíz. También incluye una instalación de PHPMyAdmin lista para utilizar
+* Servidor MySQL: Se puede acceder a través de PHPMyAdmin con usuario `admin` y la contraseña generada al ejecutar el contenedor. Desde consola también se puede acceder como `root` sin contraseña.
+* Subida de archivos: para subir archivos al servidor, se puede utilizar el protocolo SFTP sobre el servidor SSH.
+
 ## Licencia
 
 Esta imagen se distribuye bajo Licencia Apache 2.0. 
