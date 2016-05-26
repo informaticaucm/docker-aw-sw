@@ -18,7 +18,9 @@ Ambas contraseñas se pueden modificar al crear el contenedor:
 
 Ejemplo:
 
-> docker run -d --name=MiContenedor -e MYSQL_PASS=mysqlp -e SSH_PASS=sshp informaticaucm/aw-sw
+```
+docker run -d --name=MiContenedor -e MYSQL_PASS=mysqlp -e SSH_PASS=sshp informaticaucm/aw-sw
+```
 
 ## Licencia
 
