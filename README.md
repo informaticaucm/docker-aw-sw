@@ -1,4 +1,4 @@
-**Imagen Docker para los proyectos de Aplicaciones Web y Sistemas Web**
+*Imagen Docker para los proyectos de Aplicaciones Web y Sistemas Web*
 
 Esta imagen de Docker incluye una pila LAMP ya configurada y lista para usar, junto con phpMyAdmin y acceso SSH como root (con contraseña). Está construida a partir del Dockerfile de tutum/lamp y adaptada para su uso en la Facultad de Informática de la FDI.
 
