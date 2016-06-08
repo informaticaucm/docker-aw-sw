@@ -21,7 +21,7 @@ RUN echo "#!/bin/sh\nexit 0" > /usr/sbin/policy-rc.d && chmod +x /usr/sbin/polic
 
 # Install basic packages
 RUN apt-get update && \
-    apt-get -y install supervisor apache2 libapache2-mod-php5 mysql-server php5-mysql pwgen php-apc php5-mcrypt openssh-server phpmyadmin && \
+    apt-get -y install supervisor apache2 libapache2-mod-php5 mysql-server php5-mysqlnd pwgen php-apc php5-mcrypt openssh-server phpmyadmin && \
   echo "ServerName localhost" >> /etc/apache2/apache2.conf && \
   apt-get clean
 
