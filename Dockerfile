@@ -7,7 +7,7 @@
 
 # Usage info
 #  - use 'docker run ... -e MYSQL_PASS=X" to set MySQL admin password (or will be randomly generated)
-#  - use 'docker run ... -e SSH_PASS=X" to set SSH root passowrd (or will default to "root:default")
+#  - use 'docker run ... -e SSH_PASS=X" to set SSH root password (or will default to "root:default")
 
 FROM ubuntu:14.04
 MAINTAINER Pablo Moreno Ger / Iván Martínez Ortiz <pablom@ucm.es / imartinez@ucm.es >
