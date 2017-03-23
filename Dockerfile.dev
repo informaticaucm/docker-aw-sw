@@ -10,7 +10,9 @@
 #  - use 'docker run ... -e SSH_PASS=X" to set SSH root password (or will default to "root:default")
 
 FROM ubuntu:xenial
-MAINTAINER Ivan Martinez-Ortiz <imartinez@ucm.es>
+MAINTAINER Ivan Martinez-Ortiz <imartinez@ucm.es>,  Pablo Moreno-Ger <pmoreno@fdi.ucm.es>
+RUN ([ ! -z $USE_APT_CACHE ] && echo 'Acquire::http { Proxy "http://172.17.0.1:3142"; };' >> /etc/apt/apt.conf.d/01proxy \
+    && echo 'Acquire::HTTPS::Proxy "false";' >> /etc/apt/apt.conf.d/01proxy) || true
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -96,7 +98,7 @@ VOLUME  ["/var/www", "/etc/apache2", "/etc/php/" ]
 COPY run.sh /usr/local/bin/
 
 # Fix scripts permisions
-RUN chmod 755 /usr/local/bin/*.sh
+RUN chmod 755 /usr/local/bin/*.sh 
 
 ENV NOTVISIBLE "in users profile"
 RUN echo "export VISIBLE=now" >> /etc/profile

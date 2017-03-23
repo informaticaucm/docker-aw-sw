@@ -1,6 +1,6 @@
 #!/bin/bash
 
-/usr/bin/mysqld_safe > /dev/null 2>&1 &
+mysqld > /dev/null 2>&1 &
 
 RET=1
 while [[ RET -ne 0 ]]; do
@@ -46,20 +46,8 @@ echo "phpmyadmin phpmyadmin/app-password-confirm password $PASS" | debconf-set-s
 echo "phpmyadmin phpmyadmin/mysql/admin-pass password" | debconf-set-selections
 echo "phpmyadmin phpmyadmin/mysql/app-pass password $PASS" | debconf-set-selections
 echo 'phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2' | debconf-set-selections
-
-
-if ! dpkg -s "phpmyadmin" 2>/dev/null 1>/dev/null; then 
-  echo "=> phpMyAdmin isn't installed: installing and configuring phpMyAdmin" 
-  
-  DEBIAN_FRONTEND=noninteractive apt-get install -y phpmyadmin
-else 
-  echo "=> phpMyAdmin is already installed: only configuring phpMyAdmin"
-  mysql -uroot -e "DROP USER 'phpmyadmin'@'localhost';"
-  mysql -uroot -e "DROP DATABASE IF EXISTS phpmyadmin"
-  echo "phpmyadmin phpmyadmin/dbconfig-reinstall boolean true" | debconf-set-selections
-  
-  DEBIAN_FRONTEND=noninteractive dpkg-reconfigure phpmyadmin
-fi 
+echo "phpmyadmin phpmyadmin/dbconfig-reinstall boolean true" | debconf-set-selections
+DEBIAN_FRONTEND=noninteractive dpkg-reconfigure phpmyadmin
 
 echo "phpmyadmin configuration completes"
 echo ""
