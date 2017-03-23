@@ -40,3 +40,5 @@ Esta imagen se distribuye bajo Licencia Apache 2.0.
 La imagen está construida a partir del Dockerfile y archivos de configuración de la imagen tutum/lamp (https://github.com/tutumcloud/lamp) y adaptada para su uso en la Facultad de Informática de la FDI.
 
 > Original credits: tutum/lamp - by Fernando Mayo <fernando@tutum.co>, Feng Honglin <hfeng@tutum.co>
+
+[![](https://images.microbadger.com/badges/image/informaticaucm/docker-aw-sw.svg)](https://microbadger.com/images/informaticaucm/docker-aw-sw "Get your own image badge on microbadger.com") [![](https://images.microbadger.com/badges/version/informaticaucm/docker-aw-sw.svg)](https://microbadger.com/images/informaticaucm/docker-aw-sw "Get your own version badge on microbadger.com")
