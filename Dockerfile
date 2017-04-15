@@ -11,6 +11,10 @@
 
 FROM ubuntu:xenial
 MAINTAINER Ivan Martinez-Ortiz <imartinez@ucm.es>
+ARG USE_APT_CACHE
+ENV USE_APT_CACHE ${USE_APT_CACHE:-false}
+RUN ([ ! -z $USE_APT_CACHE ] && echo 'Acquire::http { Proxy "http://172.17.0.1:3142"; };' >> /etc/apt/apt.conf.d/01proxy \
+    && echo 'Acquire::HTTPS::Proxy "false";' >> /etc/apt/apt.conf.d/01proxy) || true
 
 ENV DEBIAN_FRONTEND noninteractive
 
