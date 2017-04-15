@@ -1,22 +1,52 @@
 #!/bin/bash
+set -eo pipefail
+shopt -s nullglob
 
-mysqld > /dev/null 2>&1 &
+# see: https://github.com/docker-library/mysql/blob/master/5.7/docker-entrypoint.sh
+# Fetch value from server config
+# We use mysqld --verbose --help instead of my_print_defaults because the
+# latter only show values present in config files, and not server defaults
+_get_config() {
+  local conf="$1"; shift
+  mysqld --verbose --help --log-bin-index="$(mktemp -u)" 2>/dev/null | awk '$1 == "'"$conf"'" { print $2; exit }'
+}
 
-RET=1
-while [[ RET -ne 0 ]]; do
-    echo "=> Waiting for confirmation of MySQL service startup"
-    sleep 5
-    mysql -uroot -e "status" > /dev/null 2>&1
-    RET=$?
+SOCKET="$(_get_config 'socket' "$@")"
+
+mysqld --skip-networking --socket="${SOCKET}" > /dev/null 2>&1 &
+pid=$!
+
+mysql=( mysql --protocol=socket -uroot -hlocalhost --socket="${SOCKET}" )
+
+for i in {30..0}; do
+  if echo 'SELECT 1' | "${mysql[@]}" &> /dev/null; then
+    break
+  fi
+  echo '=> MySQL init process in progress...'
+  sleep 1
 done
+if [ "$i" = 0 ]; then
+  echo >&2 '=> MySQL init process failed.'
+  exit 1
+fi
 
-PASS=${MYSQL_PASS:-$(pwgen -s 12 1)}
+PASS=${MYSQL_PASS:-$(pwgen -s 20 1)}
 _word=$( [ ${MYSQL_PASS} ] && echo "preset" || echo "random" )
 echo "=> Creating MySQL admin user with ${_word} password"
 echo "=> Your new admin password is $PASS "
 
-mysql -uroot -e "CREATE USER 'admin'@'%' IDENTIFIED BY '$PASS'"
-mysql -uroot -e "GRANT ALL PRIVILEGES ON *.* TO 'admin'@'%' WITH GRANT OPTION"
+# Recreate debian user too
+DEBIAN_MYSQL_USER_NAME=$(cat /etc/mysql/debian.cnf | sed -n 's/user \+= \+\(.*\)/\1/p' | head -1)
+DEBIAN_MYSQL_USER_PASSWORD=$(cat /etc/mysql/debian.cnf | sed -n 's/password \+= \+\(.*\)/\1/p' | head -1)
+
+"${mysql[@]}" <<-EOSQL
+CREATE USER 'admin'@'%' IDENTIFIED BY '$PASS';
+GRANT ALL PRIVILEGES ON *.* TO 'admin'@'%' WITH GRANT OPTION ;
+-- Recreate debian maintenance mysql user
+CREATE USER '$DEBIAN_MYSQL_USER_NAME'@'localhost' IDENTIFIED BY '$DEBIAN_MYSQL_USER_PASSWORD';
+GRANT ALL PRIVILEGES ON *.* TO '$DEBIAN_MYSQL_USER_NAME'@'localhost' WITH GRANT OPTION ;
+FLUSH PRIVILEGES ;
+EOSQL
 
 
 echo "=> Done!"
@@ -49,10 +79,12 @@ echo 'phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2' | debconf
 echo "phpmyadmin phpmyadmin/dbconfig-reinstall boolean true" | debconf-set-selections
 DEBIAN_FRONTEND=noninteractive dpkg-reconfigure phpmyadmin
 
-echo "phpmyadmin configuration completes"
+echo "Done !"
 echo ""
 echo ""
 echo "========================================================================"
 
-
-mysqladmin -uroot shutdown
+if ! kill -s TERM "$pid" || ! wait "$pid"; then
+  echo >&2 'MySQL init process failed.'
+  exit 1
+fi
