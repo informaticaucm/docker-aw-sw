@@ -26,16 +26,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Install MySQL
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    mysql-server \
-    && rm -rf /var/lib/apt/lists/* \
-    && rm -rf /var/lib/mysql && mkdir -p /var/lib/mysql /var/run/mysqld \
+RUN {\
+	echo mysql-server-5.7 mysql-server/root_password password ''; \
+	echo mysql-server-5.7 mysql-server/root_password_again password ''; \
+    } | debconf-set-selections \
+    && apt-get update && apt-get install -y --no-install-recommends \
+    mysql-server-5.7 \
+    && rm -fr /var/lib/mysql \
+    && mkdir -p /var/lib/mysql /var/run/mysqld \
     && chown -R mysql:mysql /var/lib/mysql /var/run/mysqld \
 # ensure that /var/run/mysqld (used for socket and lock files) is writable regardless of the UID our mysqld instance ends up having at runtime
-    && chmod 777 /var/run/mysqld
-
-# Allow running MySQL during image building
-RUN echo "#!/bin/sh\nexit 0" > /usr/sbin/policy-rc.d && chmod +x /usr/sbin/policy-rc.d
+    && chmod 777 /var/run/mysqld \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install Apache2 + PHP + PHPMyAdmin
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -61,23 +63,24 @@ RUN sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/s
 COPY supervisor/*.conf /etc/supervisor/conf.d/
 COPY supervisor/*.sh /usr/local/bin/
 
-
-
 #
 # Prepare MySQL
 #
 
 ENV MYSQL_PASS default
-COPY my.cnf /etc/mysql/conf.d/
 COPY configure_mysql.sh /usr/local/bin/
+
+RUN sed -i 's/127\.0\.0\.1/0\.0\.0\.0/g' /etc/mysql/my.cnf
 
 # comment out a few problematic configuration values
 # don't reverse lookup hostnames, they are usually another container
 RUN sed -Ei 's/^(bind-address|log)/#&/' /etc/mysql/mysql.conf.d/mysqld.cnf \
-	&& echo '[mysqld]\nskip-host-cache\nskip-name-resolve' > /etc/mysql/conf.d/docker.cnf
+    && echo '[mysqld]\nskip-host-cache\nskip-name-resolve' > /etc/mysql/conf.d/docker.cnf
+
+#RUN /usr/local/bin/configure_mysql.sh
 
 # Add volumes for MySQL 
-VOLUME  ["/etc/mysql", "/var/lib/mysql" ]
+VOLUME  [ "/var/lib/mysql" ]
 
 #
 # Prepare Apache
