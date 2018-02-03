@@ -30,7 +30,7 @@ if [ "$i" = 0 ]; then
   exit 1
 fi
 
-PASS=${MYSQL_PASS:-$(pwgen -s 20 1)}
+PASS=${MYSQL_PASS:-$(pwgen -s 32 1)}
 _word=$( [ ${MYSQL_PASS} ] && echo "preset" || echo "random" )
 echo "=> Creating MySQL admin user with ${_word} password"
 echo "=> Your new admin password is $PASS "
@@ -62,22 +62,24 @@ echo "========================================================================"
 echo ""
 echo ""
 echo "Starting phpmyadmin configuration"
+PMA_DATABASE=phpmyadmin
+PMA_USER=$(pwgen -s 10 1)
+PMA_PASSWORD=$(pwgen -s 32 1)
+"${mysql[@]}" <<-EOSQL
+CREATE DATABASE $PMA_DATABASE;
+CREATE USER '$PMA_USER'@'localhost' IDENTIFIED BY '$PMA_PASSWORD';
+GRANT ALL PRIVILEGES ON $PMA_DATABASE.* TO '$PMA_USER'@'localhost';
+FLUSH PRIVILEGES ;
+EOSQL
 
+"${mysql[@]}" < $PHP_MY_ADMIN_HOME/sql/create_tables.sql
 
-
-# preseed installation configuration
-# - dbconfig-install true -> configure installation with dbconfig_common
-# - reconfigure-webserver apache2 -> use apache2 as webserver
-# - mysql/admin-pass -> mysql root user password (empty)
-# - mysql/app-pass -> password for phpmyadmin to register with the database server (blank is random)
-# - app-password-confirm -> confirmation for password for phpmyadmin to register with the database server
-echo 'phpmyadmin phpmyadmin/dbconfig-install boolean true' | debconf-set-selections
-echo "phpmyadmin phpmyadmin/app-password-confirm password $PASS" | debconf-set-selections
-echo "phpmyadmin phpmyadmin/mysql/admin-pass password" | debconf-set-selections
-echo "phpmyadmin phpmyadmin/mysql/app-pass password $PASS" | debconf-set-selections
-echo 'phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2' | debconf-set-selections
-echo "phpmyadmin phpmyadmin/dbconfig-reinstall boolean true" | debconf-set-selections
-DEBIAN_FRONTEND=noninteractive dpkg-reconfigure phpmyadmin
+cat <<-EOF > /etc/phpmyadmin/config-db.inc.php
+<?php
+\$dbname="$PMA_DATABASE";
+\$dbuser="$PMA_USER";
+\$dbpass="$PMA_PASSWORD";
+EOF
 
 echo "Done !"
 echo ""
