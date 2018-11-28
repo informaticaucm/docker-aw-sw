@@ -2,7 +2,7 @@
 #
 # LAMP stack for student projects
 
-FROM ubuntu:xenial
+FROM ubuntu:bionic
 LABEL maintainer="Ivan Martinez-Ortiz <imartinez@fdi.ucm.es>"
 
 ENV DEBIAN_FRONTEND noninteractive
@@ -15,13 +15,19 @@ RUN ([ ! -z $USE_APT_CACHE ] && echo 'Acquire::http { Proxy "http://172.17.0.1:3
 
 
 # grab tini for signal processing and zombie killing
-ENV TINI_VERSION v0.16.1
+ENV TINI_VERSION v0.18.0
 RUN apt-get update && apt-get install -y --no-install-recommends \
-	curl \
+	curl gpg dirmngr \
 	&& curl -k -fSL "https://github.com/krallin/tini/releases/download/$TINI_VERSION/tini" -o /usr/local/bin/tini \
 	&& curl -k -fSL "https://github.com/krallin/tini/releases/download/$TINI_VERSION/tini.asc" -o /usr/local/bin/tini.asc \
 	&& export GNUPGHOME="$(mktemp -d)" \ 
-	&& gpg --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 595E85A6B1B4779EA4DAAEC70B588DFF0527A9B7 \
+	&& for server in $(shuf -e ha.pool.sks-keyservers.net \
+                            hkp://p80.pool.sks-keyservers.net:80 \
+                            keyserver.ubuntu.com \
+                            hkp://keyserver.ubuntu.com:80 \
+                            pgp.mit.edu) ; do \
+        gpg --keyserver "$server" --recv-keys  595E85A6B1B4779EA4DAAEC70B588DFF0527A9B7 && break || : ; \
+    done \
 	&& gpg --batch --verify /usr/local/bin/tini.asc /usr/local/bin/tini \
 	&& rm -r "$GNUPGHOME" /usr/local/bin/tini.asc && unset GNUPGHOME \
 	&& chmod +x /usr/local/bin/tini \
@@ -87,25 +93,19 @@ ENV PHP_UPLOAD_MAX_FILESIZE 10M
 ENV PHP_POST_MAX_SIZE 10M
 COPY apache/fix_acl.sh /usr/local/bin/
 
-RUN export GNUPGHOME="$(mktemp -d)" \
-        && gpg --no-default-keyring --keyring /etc/apt/trusted.gpg.d/ondrej-ppa.gpg --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 14AA40EC0831756756D7F66C4F4EA0AAE5267A6C \
-	&& chmod 544 /etc/apt/trusted.gpg.d/ondrej-ppa.gpg \
-        && rm -fr "$GNUPGHOME" && unset GNUPGHOME \
-	&& echo "deb http://ppa.launchpad.net/ondrej/php/ubuntu xenial main" > /etc/apt/sources.list.d/ondrej-ppa.list \
-	&& echo "deb-src http://ppa.launchpad.net/ondrej/php/ubuntu xenial main" >> /etc/apt/sources.list.d/ondrej-ppa.list \
-	&& apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends \
 	apache2 libapache2-mod-php7.2 php7.2-mysqli php7.2-mbstring php7.2-xml php7.2-gd php7.2-bz2 php7.2-zip php7.2-curl php7.2-opcache php7.2-json php-apcu \
 	&& echo "ServerName localhost" >> /etc/apache2/apache2.conf \
 	&& a2enmod rewrite \
 	&& chmod +x /usr/local/bin/fix_acl.sh \
 	# installation cleanup
 	&& apt-get clean \
-	&& rm -fr /var/lib/apt/lists/* /tmp/* /var/tmp/* /etc/apt/trusted.gpg.d/ondrej-ppa.gpg /etc/apt/sources.list.d/ondrej-ppa.list
+	&& rm -fr /var/lib/apt/lists/* /tmp/* /var/tmp/*
 # Add volumes for Apache2 + PHP
 VOLUME ["/var/www", "/etc/apache2", "/etc/php/" ]
 
 # Install phpmyadmin
-ENV PHP_MY_ADMIN_VERSION 4.7.7
+ENV PHP_MY_ADMIN_VERSION 4.8.3
 ENV PHP_MY_ADMIN_HOME /opt/phpmyadmin
 COPY phpmyadmin/configure_phpmyadmin.sh /usr/local/bin
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -113,7 +113,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         && curl -k -fSL "https://files.phpmyadmin.net/phpMyAdmin/${PHP_MY_ADMIN_VERSION}/phpMyAdmin-${PHP_MY_ADMIN_VERSION}-all-languages.tar.gz" -o /opt/phpmyadmin.tar.gz \
         && curl -k -fSL "https://files.phpmyadmin.net/phpMyAdmin/${PHP_MY_ADMIN_VERSION}/phpMyAdmin-${PHP_MY_ADMIN_VERSION}-all-languages.tar.gz.asc" -o /opt/phpmyadmin.tar.gz.asc \
         && export GNUPGHOME="$(mktemp -d)" \
-        && gpg --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 3D06A59ECE730EB71B511C17CE752F178259BD92 \
+	&& for server in $(shuf -e ha.pool.sks-keyservers.net \
+                            hkp://p80.pool.sks-keyservers.net:80 \
+                            keyserver.ubuntu.com \
+                            hkp://keyserver.ubuntu.com:80 \
+                            pgp.mit.edu) ; do \
+        gpg --keyserver "$server" --recv-keys 3D06A59ECE730EB71B511C17CE752F178259BD92 && break || : ; \
+    done \
         && gpg --batch --verify /opt/phpmyadmin.tar.gz.asc /opt/phpmyadmin.tar.gz \
         && rm -r "$GNUPGHOME" && unset GNUPGHOME \
 	&& tar xzf /opt/phpmyadmin.tar.gz -C /opt \
