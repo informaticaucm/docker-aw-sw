@@ -2,7 +2,7 @@
 
 Esta imagen de Docker incluye una pila LAMP ya configurada y lista para usar, junto con phpMyAdmin y acceso SSH como root (con contraseña). Está construida a partir del Dockerfile de tutum/lamp y adaptada para su uso en la Facultad de Informática de la FDI.
 
-El servidor está basado en Ubuntu 16.04 (LTS), y todo el software se instala a partir de los repositorios de Ubuntu.
+El servidor está basado en Ubuntu 18.04 (LTS), y todo el software se instala a partir de los repositorios de Ubuntu.
 
 La imagen únicamente expone los puertos 80 y 22 (para acceder a otros puertos, se pueden establecer túneles SSH).
 
