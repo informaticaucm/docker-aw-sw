@@ -1,44 +1,85 @@
 # Imagen Docker para los proyectos de Aplicaciones Web y Sistemas Web
 
-Esta imagen de Docker incluye una pila LAMP ya configurada y lista para usar, junto con phpMyAdmin y acceso SSH como root (con contraseña). Está construida a partir del Dockerfile de tutum/lamp y adaptada para su uso en la Facultad de Informática de la FDI.
+Esta imagen de Docker se basa en la imagen oficial [php:7.3-apache-buster](https://hub.docker.com/_/php) añadiendo acceso por SSH y adaptada para su uso en la Facultad de Informática de la FDI.
 
-El servidor está basado en Ubuntu 18.04 (LTS), y todo el software se instala a partir de los repositorios de Ubuntu.
+> El servidor de SSH está pensado para subir los archivos por SFTP y para realizar tareas básicas administrativas o revisión de los ficheros de log cuando el contenedor se ejecuta en un servidor remoto.
 
 La imagen únicamente expone los puertos 80 y 22 (para acceder a otros puertos, se pueden establecer túneles SSH).
 
-
 ## Instrucciones para lanzar el contenedor
 
-Al lanzar el contenedor sin instrucciones adicionales se configuran todos los servicios, incluyendo un password aleatorio para MySQL y un password por defecto (root:default) para acceso vía SSH.
+Al lanzar el contenedor sin instrucciones adicionales se configuran todos los servicios, incluyendo un password para la cuenta del usuario `root` (por defecto `default`) para el acceso vía SSH.
 
-Ambas contraseñas se pueden modificar al crear el contenedor:
+La contraseña se pueden modificar al crear el contenedor:
 
-* -e MYSQL_PASS=X
 * -e SSH_PASS=X
 
-Ejemplo:
+Ejemplos:
 
 ```
-docker run -d --name=MiContenedor -e MYSQL_PASS=mysqlp -e SSH_PASS=sshp informaticaucm/docker-aw-sw
+# Ejecución básica
+docker run -d \
+  --name=MiContenedor \
+  -e SSH_PASS=sshp \
+  informaticaucm/docker-aw-sw
+
+# Ejecución cambiando los puertos de escucha de Apache y SSH
+docker run -d \
+  --name=MiContenedor \
+  -e SSH_PASS=sshp \
+  -p 80:8080 \
+  -p 22:2222 \
+  informaticaucm/docker-aw-sw
+
+# Ejecución cambiando los puertos de escucha de Apache y SSH asociándolos sólo a la interfaz local
+docker run -d \
+  --name=MiContenedor \
+  -e SSH_PASS=sshp \
+  -p 127.0.0.1:80:8080 \
+  -p 127.0.0.1:22:2222 \
+  informaticaucm/docker-aw-sw
 ```
 
 ## Instrucciones de uso
 
-En el momento de lanzar el contenedor, se activan los siguientes servicios y funciones:
+Este contenedor es de poca utilidad por sí solo ya normalmente se necesita un servidor de base de datos y es recomendable tener una interfaz administrativa para dicho servidor de base de datos.
 
-* Servidor SSH: Se puede acceder directamente como `root` usando el password generado al ejecutar el contenedor.
-* Servidor Apache: Configurado por defecto con `/var/www/html` como directorio raíz. También incluye una instalación de PHPMyAdmin lista para utilizar
-* Servidor MySQL: Se puede acceder a través de PHPMyAdmin con usuario `admin` y la contraseña generada al ejecutar el contenedor. Desde consola también se puede acceder como `root` sin contraseña.
-* Subida de archivos: para subir archivos al servidor, se puede utilizar el protocolo SFTP sobre el servidor SSH.
+Para simplificar su uso, en el repositorio se proporciona un archivo `docker-compose.yml` que puede utilizarse para lanzar un stack LAMP completo utilizando la herramienta [docker-compose](https://docs.docker.com/compose/). Este archivo lanza 1 instancia de los siguientes contenedores:
 
-Habitualmente al subir los archivos a través de SFTP y/o modificarlos en el contenedor se modifican los propietarios o los permisos de los archivos y/o carpetas, de tal modo que Apache no tiene permisos para utilizarlos. Para evitar estos problemas, una vez subas los archivos a `/var/www/html` ejecuta el comando `/usr/local/bin/fix-acl.sh` que asignará los permisos y propietarios oportunos a las carpetas y los archivos para que no haya problemas.
+* [Apache + PHP + SSH](https://hub.docker.com/r/informaticaucm/docker-aw-sw).
+* [MariaDB](https://hub.docker.com/_/php)
+* [phpMyAdmin](https://hub.docker.com/_/phpmyadmin)
+
+Por defecto los diferentes servicios escuchan en los siguientes puertos (se puede editar el fichero `docker-compose.yml` para modificarlos):
+
+* Puerto `8080`: Apache
+* Puerto `8081`: phpMyAdmin
+* Puerto `8022`: SSH
+
+Para lanzar la pila completa debes ejecutar desde el directorio donde se encuentre `docker-compose.yml`:
+
+```
+# Ejecución en primer plano (puedes terminar la ejecución pulsando Ctrl+C)
+docker-compose
+
+# Ejecución en segundo plano
+# docker-compose up
+
+# Para parar la ejecución de la pila en segundo plano
+# docker-compose down
+```
+
+Por comodidad, se han mapeado varios directorios dentro del contenedor a directorios del anfitrión donde se ejecuta docker:
+
+* `servidor/apache2 -> /etc/apache2`:  Aquí puedes modificar los archivos de configuración de apache.
+* `servidor/php -> /usr/local/etc/php`: Aquí puedes modificar los archivos de configuración de PHP.
+* `servidor/www -> /var/www`: dentro se creará el directorio `html` donde podrás alojar tu aplicación.
+* `servidor/log -> /var/www`: dentro se crearán los directorios `apache2` y `php` donde se alojarán los ficheros de log de Apache y PHP respectivamente.
+
+Habitualmente al subir los archivos a través de SFTP y / o modificarlos en el contenedor se modifican los propietarios o los permisos de los archivos y/o carpetas, de tal modo que Apache no tiene permisos para utilizarlos. Para evitar estos problemas, una vez subas o modifiques archivos en `/var/www/html` ejecuta el comando `fix-www-acl` que asignará la propiedad y los permisos oportunos a los directorios y los archivos para que no haya problemas.
 
 ## Licencia
 
 Esta imagen se distribuye bajo Licencia Apache 2.0. 
-
-La imagen está construida a partir del Dockerfile y archivos de configuración de la imagen tutum/lamp (https://github.com/tutumcloud/lamp) y adaptada para su uso en la Facultad de Informática de la FDI.
-
-> Original credits: tutum/lamp - by Fernando Mayo <fernando@tutum.co>, Feng Honglin <hfeng@tutum.co>
 
 [![](https://images.microbadger.com/badges/image/informaticaucm/docker-aw-sw.svg)](https://microbadger.com/images/informaticaucm/docker-aw-sw "Get your own image badge on microbadger.com") [![](https://images.microbadger.com/badges/version/informaticaucm/docker-aw-sw.svg)](https://microbadger.com/images/informaticaucm/docker-aw-sw "Get your own version badge on microbadger.com")
