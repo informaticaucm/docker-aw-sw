@@ -1,0 +1,17 @@
+#!/usr/bin/with-contenv bash
+set -euo pipefail
+[[ "${DEBUG:-false}" == "true" ]] && set -x
+
+while read -r dir; do
+    if [[ ! -f "$dir/.docker-restored" ]]; then
+        echo "Restoring ${dir} from /templates/folders"
+        (tar -cf - "/templates/folders${dir}" 2> /dev/null) | ( tar --strip-components=2 -C / -xpf - > /dev/null 2>&1)
+        touch "$dir/.docker-restored"
+    fi
+done < /templates/folders-to-restore
+
+
+while read -r f; do
+    echo "Restoring ${f} from /templates/files"
+    (tar -cf - "/templates/files${f}" 2> /dev/null) | ( tar --strip-components=2 --overwrite -C / -xpf - > /dev/null 2>&1)
+done < /templates/files-to-restore

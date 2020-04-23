@@ -1,0 +1,4 @@
+/etc/apache2 false root root 0755 0755
+/var/run/apache2 false www-data www-data 0777 0777
+/run/apache2 false www-data www-data 0777 0777
+/run/lock/apache2 false www-data www-data 0777 0777

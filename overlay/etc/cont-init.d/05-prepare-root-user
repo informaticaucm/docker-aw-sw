@@ -1,0 +1,8 @@
+#!/usr/bin/with-contenv bash
+
+: "${SSH_PASS:=default}"
+
+password=$(openssl passwd -6 ${SSH_PASS})
+sed -r -e "s|^root:[^:]+:(.*)|root:${password}:\1|" /etc/shadow > /tmp/shadow
+cat /tmp/shadow > /etc/shadow
+rm /tmp/shadow

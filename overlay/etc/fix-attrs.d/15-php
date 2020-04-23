@@ -1,0 +1,2 @@
+/var/lib/php false root www-data 0775 0775
+/usr/local/etc/php false root root 0775 0775

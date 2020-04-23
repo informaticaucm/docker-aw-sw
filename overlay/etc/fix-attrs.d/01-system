@@ -1,0 +1,4 @@
+/etc false root root 0755 0755
+/var false root root 0755 0755
+/run false root root 0755 0755
+/tmp false root root 1777 1777
