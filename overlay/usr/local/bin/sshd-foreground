@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+[[ "${DEBUG:-false}" == "true" ]] && set -x
+
+# https://serverfault.com/questions/952391/sshd-logs-in-docker-container-not-shown-by-docker-logs
+# -D in CMD below prevents sshd from becoming a daemon. -e is to log everything to stderr.
+exec /usr/sbin/sshd -D -e 2>&1

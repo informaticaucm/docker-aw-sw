@@ -1,0 +1,23 @@
+#!/usr/bin/with-contenv bash
+
+function php_ini_get() {
+    local ini_varname=$1
+    ini_value=$(echo "<?php echo ini_get('$ini_varname');" | php)
+    echo $ini_value
+}
+
+: "${PHP_UPLOAD_MAX_FILESIZE:=10M}"
+: "${PHP_POST_MAX_SIZE:=10M}"
+
+sed -ri \
+    -e "s/^upload_max_filesize.*/upload_max_filesize = ${PHP_UPLOAD_MAX_FILESIZE}/" \
+    -e "s/^post_max_size.*/post_max_size = ${PHP_POST_MAX_SIZE}/" \
+    "$PHP_INI_DIR/conf.d/upload.ini"
+
+save_path=$(php_ini_get 'session.save_path')
+if [[ ! -d "$save_path" ]]; then
+    mkdir -p $save_path
+fi
+
+chown www-data:www-data "$save_path"
+chmod 770 "$save_path"

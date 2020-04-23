@@ -1,0 +1,5 @@
+/tmp false root root 1777 1777
+/root false root root 0700 0700
+/var/log false root root 0755 0755
+/run false root root 0755 0755
+/var/www false root root 0755 0755
