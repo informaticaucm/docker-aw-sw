@@ -82,4 +82,4 @@ Habitualmente al subir los archivos a través de SFTP y / o modificarlos en el c
 
 Esta imagen se distribuye bajo Licencia Apache 2.0. 
 
-[![](https://images.microbadger.com/badges/image/informaticaucm/docker-aw-sw:201920.4.0.svg)](https://microbadger.com/images/informaticaucm/docker-aw-sw:201920.4.0 "Get your own image badge on microbadger.com") [![](https://images.microbadger.com/badges/version/informaticaucm/docker-aw-sw:201920.4.0.svg)](https://microbadger.com/images/informaticaucm/docker-aw-sw:201920.4.0 "Get your own version badge on microbadger.com")
+[![](https://images.microbadger.com/badges/image/informaticaucm/docker-aw-sw:201920.4.1.svg)](https://microbadger.com/images/informaticaucm/docker-aw-sw:201920.4.1 "Get your own image badge on microbadger.com") [![](https://images.microbadger.com/badges/version/informaticaucm/docker-aw-sw:201920.4.1.svg)](https://microbadger.com/images/informaticaucm/docker-aw-sw:201920.4.1 "Get your own version badge on microbadger.com")
