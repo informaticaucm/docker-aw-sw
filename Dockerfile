@@ -240,6 +240,6 @@ RUN set -xe;\
 
 COPY overlay /
 
-EXPOSE 80,22
+EXPOSE 80/tcp 22/tcp
 
 ENTRYPOINT ["/init"]
