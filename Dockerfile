@@ -240,4 +240,6 @@ RUN set -xe;\
 
 COPY overlay /
 
+EXPOSE 80,22
+
 ENTRYPOINT ["/init"]

@@ -1,0 +1,54 @@
+version: '3.7'
+
+services:
+  apache:
+    image: x-informaticaucm
+# Si cambias la imagen, descomenta la siguiente línea y comenta la anterior
+#    build: .
+    container_name: apache
+    restart: unless-stopped
+    environment:
+      SSH_PASS: "${SSH_PASS:-default}"
+      PHP_UPLOAD_MAX_FILESIZE: "50M"
+      PHP_POST_MAX_SIZE: "50M"
+    volumes:
+      - ./servidor/www:/var/www
+      - ./servidor/apache2:/etc/apache2
+      - ./servidor/php:/usr/local/etc/php
+      - ./servidor/log:/var/log
+    ports:
+      - target: 80
+        published: 8080
+        protocol: tcp
+        mode: host
+      - target: 22
+        published: 8022
+        protocol: tcp
+        mode: host
+
+# mariadb
+  db:
+    image: mariadb:10.4
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    container_name: db
+    restart: unless-stopped
+    user: root
+    environment:
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:-default}"
+# https://github.com/docker-library/mariadb/issues/261
+# https://github.com/docker-library/mariadb/issues/262      
+      MYSQL_INITDB_SKIP_TZINFO: "true"
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:4.9.4
+    container_name: phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: "db"
+    ports:
+      - target: 80
+        published: 8081
+        protocol: tcp
+        mode: host
