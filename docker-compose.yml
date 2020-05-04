@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   apache:
-    image: x-informaticaucm
+    image: informaticaucm/docker-aw-sw:201920.4.1
 # Si cambias la imagen, descomenta la siguiente línea y comenta la anterior
 #    build: .
     container_name: apache
